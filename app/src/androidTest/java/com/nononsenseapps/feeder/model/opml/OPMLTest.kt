@@ -837,6 +837,7 @@ class OPMLTest : DIAware {
                         UserSettings.SETTING_TRANSLATE_ARTICLE_PREVIEWS_BY_DEFAULT -> "true"
                         UserSettings.SETTING_TRANSLATE_ARTICLES_BY_DEFAULT -> "false"
                         UserSettings.SETTINGS_FORCE_SINGLE_COLUMN -> "false"
+                        UserSettings.SETTING_TIMELINE_MODE -> "true"
                     }
             }
     }
@@ -927,6 +928,7 @@ private val sampleFile: List<String> =
           <feeder:setting key="pref_translate_feed_cards_by_default" value="true"/>
           <feeder:setting key="pref_translate_articles_by_default" value="false"/>
           <feeder:setting key="pref_force_single_column" value="false"/>
+          <feeder:setting key="pref_timeline_mode" value="true"/>
           <feeder:blocked pattern="foo"/>
         </feeder:settings>
       </body>
