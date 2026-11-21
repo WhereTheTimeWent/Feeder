@@ -682,7 +682,7 @@ fun FeedScreen(
                     }
                 }
 
-                if (viewState.currentFeedOrTag.isNotSavedArticles) {
+                if (viewState.currentFeedOrTag.isNotSavedArticles && !viewState.timelineMode) {
                     PlainTooltipBox(
                         tooltip = {
                             Text(stringResource(id = R.string.filter_noun))

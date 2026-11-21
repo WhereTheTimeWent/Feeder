@@ -136,6 +136,17 @@ class SettingsStore(
         sp.edit().putBoolean(PREF_IS_MARK_AS_READ_ON_SCROLL, open).apply()
     }
 
+    private val _timelineMode =
+        MutableStateFlow(
+            sp.getBoolean(PREF_TIMELINE_MODE, false),
+        )
+    val timelineMode: StateFlow<Boolean> = _timelineMode.asStateFlow()
+
+    fun setTimelineMode(value: Boolean) {
+        _timelineMode.update { value }
+        sp.edit().putBoolean(PREF_TIMELINE_MODE, value).apply()
+    }
+
     private val _maxLines =
         MutableStateFlow(
             sp.getInt(PREF_MAX_LINES, 2),
@@ -847,6 +858,7 @@ enum class UserSettings(
     SETTING_TRANSLATE_ARTICLE_PREVIEWS_BY_DEFAULT(key = PREF_TRANSLATE_ARTICLE_PREVIEWS_BY_DEFAULT),
     SETTING_TRANSLATE_ARTICLES_BY_DEFAULT(key = PREF_TRANSLATE_ARTICLES_BY_DEFAULT),
     SETTINGS_FORCE_SINGLE_COLUMN(key = PREF_FORCE_SINGLE_COLUMN),
+    SETTING_TIMELINE_MODE(key = PREF_TIMELINE_MODE),
     ;
 
     companion object {

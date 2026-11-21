@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="timeline_mode">Timeline-Modus</string>
+  <string name="timeline_mode_description">Neueste Artikel oben, gelesene bleiben sichtbar. Öffnet beim ältesten ungelesenen Artikel und markiert Artikel als gelesen, sobald sie unten aus dem Bild scrollen.</string>
+</resources>

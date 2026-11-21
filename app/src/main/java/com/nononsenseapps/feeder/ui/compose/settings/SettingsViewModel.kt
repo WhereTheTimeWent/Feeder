@@ -151,6 +151,10 @@ class SettingsViewModel(
         repository.setIsMarkAsReadOnScroll(value)
     }
 
+    fun setTimelineMode(value: Boolean) {
+        repository.setTimelineMode(value)
+    }
+
     fun setMaxLines(value: Int) {
         repository.setMaxLines(value)
     }
@@ -324,6 +328,7 @@ class SettingsViewModel(
                 repository.useInAppAudioPlayer,
                 repository.forceSingleColumn,
                 repository.applyBlocklistToLinks,
+                repository.timelineMode,
             ) { params: Array<Any> ->
                 @Suppress("UNCHECKED_CAST")
                 SettingsViewState(
@@ -377,6 +382,7 @@ class SettingsViewModel(
                     useInAppAudioPlayer = params[40] as Boolean,
                     forceSingleColumn = params[41] as Boolean,
                     applyBlocklistToLinks = params[42] as Boolean,
+                    timelineMode = params[43] as Boolean,
                 )
             }.collect {
                 _viewState.value = it
@@ -474,6 +480,7 @@ data class SettingsViewState(
     val useInAppAudioPlayer: Boolean = true,
     val forceSingleColumn: Boolean = true,
     val applyBlocklistToLinks: Boolean = false,
+    val timelineMode: Boolean = false,
 )
 
 data class UIFeedSettings(

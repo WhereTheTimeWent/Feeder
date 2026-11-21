@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="timeline_mode">Timeline mode</string>
+  <string name="timeline_mode_description">Newest articles on top, read articles stay visible. Opens at the oldest unread article and marks articles as read once they leave the screen at the bottom.</string>
+</resources>

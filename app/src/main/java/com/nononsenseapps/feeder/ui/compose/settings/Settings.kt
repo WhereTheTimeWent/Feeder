@@ -58,6 +58,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
@@ -265,6 +266,8 @@ fun SettingsScreen(
             },
             forceSingleColumn = viewState.forceSingleColumn,
             onForceSingleColumnChange = settingsViewModel::setForceSingleColumn,
+            timelineMode = viewState.timelineMode,
+            onTimelineModeChange = settingsViewModel::setTimelineMode,
             modifier = Modifier.padding(padding),
         )
     }
@@ -456,6 +459,8 @@ fun SettingsList(
     forceSingleColumn: Boolean,
     onForceSingleColumnChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
+    timelineMode: Boolean = false,
+    onTimelineModeChange: (Boolean) -> Unit = {},
 ) {
     val scrollState = rememberScrollState()
     val dimens = LocalDimens.current
@@ -675,6 +680,13 @@ fun SettingsList(
         SettingsGroup(
             title = R.string.article_list_settings,
         ) {
+            SwitchSetting(
+                title = stringResource(id = R.string.timeline_mode),
+                description = stringResource(id = R.string.timeline_mode_description),
+                checked = timelineMode,
+                onCheckedChange = onTimelineModeChange,
+            )
+
             MenuSetting(
                 title = stringResource(id = R.string.sort),
                 currentValue = currentSortingValue,
@@ -687,6 +699,7 @@ fun SettingsList(
                 modifier =
                     Modifier
                         .width(dimens.maxContentWidth),
+                enabled = !timelineMode,
             )
 
             SwitchSetting(
@@ -743,8 +756,9 @@ fun SettingsList(
 
             SwitchSetting(
                 title = stringResource(id = R.string.mark_as_read_on_scroll),
-                checked = isMarkAsReadOnScroll,
+                checked = isMarkAsReadOnScroll || timelineMode,
                 onCheckedChange = onMarkAsReadOnScroll,
+                enabled = !timelineMode,
             )
 
             SwitchSetting(
@@ -1116,6 +1130,9 @@ fun ExternalSetting(
     }
 }
 
+// Material's opacity for disabled content
+private const val DISABLED_SETTING_ALPHA = 0.38f
+
 @Composable
 fun <T> MenuSetting(
     title: String,
@@ -1124,13 +1141,15 @@ fun <T> MenuSetting(
     onSelection: (T) -> Unit,
     modifier: Modifier = Modifier,
     icon: (@Composable () -> Unit)? = {},
+    enabled: Boolean = true,
 ) {
     var expanded by rememberSaveable { mutableStateOf(false) }
     val closeMenuText = stringResource(id = R.string.close_menu)
     Row(
         modifier =
             modifier
-                .clickable { expanded = !expanded }
+                .clickable(enabled = enabled) { expanded = !expanded }
+                .alpha(if (enabled) 1f else DISABLED_SETTING_ALPHA)
                 .semantics {
                     role = Role.Button
                 },

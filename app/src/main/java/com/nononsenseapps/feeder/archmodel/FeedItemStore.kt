@@ -94,6 +94,7 @@ class FeedItemStore(
         newestFirst: Boolean,
         filter: FeedListFilter,
         search: String,
+        timeline: Boolean = false,
     ): Flow<PagingData<FeedListItem>> =
         Pager(
             config =
@@ -114,8 +115,9 @@ class FeedItemStore(
 
                 rawQueryFilter(filter, search, args, minReadTime, feedId, tag)
 
-                when (newestFirst) {
-                    true -> append("ORDER BY $FEED_ITEM_LIST_SORT_ORDER_DESC\n")
+                when {
+                    timeline -> append("ORDER BY $FEED_ITEM_LIST_SORT_ORDER_TIMELINE\n")
+                    newestFirst -> append("ORDER BY $FEED_ITEM_LIST_SORT_ORDER_DESC\n")
                     else -> append("ORDER BY $FEED_ITEM_LIST_SORT_ORDER_ASC\n")
                 }
             }
@@ -187,6 +189,7 @@ class FeedItemStore(
         minReadTime: Instant,
         descending: Boolean,
         cursor: FeedItemCursor,
+        timeline: Boolean = false,
     ) {
         val queryString = StringBuilder()
         val args = mutableListOf<Any?>()
@@ -203,6 +206,18 @@ class FeedItemStore(
             rawQueryFilter(filter, search, args, minReadTime, feedId, tag)
             // this version of sqlite doesn't seem to support tuple comparisons
             append("and (\n")
+            if (timeline) {
+                // The timeline order puts the arrival time in front of the usual sort keys
+                val cursorFirstSyncedTime =
+                    "(SELECT first_synced_time FROM feed_items AS cursor_item WHERE cursor_item.id = ?)"
+                append(
+                    when (descending) {
+                        true -> "first_synced_time < $cursorFirstSyncedTime\n"
+                        else -> "first_synced_time > $cursorFirstSyncedTime\n"
+                    },
+                ).also { args.add(cursor.id) }
+                append("or first_synced_time = $cursorFirstSyncedTime and (\n").also { args.add(cursor.id) }
+            }
 
             append(
                 when (descending) {
@@ -231,6 +246,9 @@ class FeedItemStore(
                 args.add(cursor.id)
             }
 
+            if (timeline) {
+                append(")\n")
+            }
             append(")\n")
 
             // where id in (

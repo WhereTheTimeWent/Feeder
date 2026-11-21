@@ -486,7 +486,7 @@ class FeedViewModel(
             repository.maxLines,
             filterMenuVisible,
             // 20
-            repository.feedListFilter,
+            repository.currentFeedListFilter,
             searchBarVisible,
             repository.search,
             repository.showOnlyTitle,
@@ -499,6 +499,7 @@ class FeedViewModel(
             renameTagDialogVisible,
             podcastPlayerStateHolder.playerState,
             repository.forceSingleColumn,
+            repository.timelineMode,
         ) { params: Array<Any?> ->
             val haveVisibleFeedItems = (params[7] as Int) > 0
             val currentFeedOrTag = params[13] as FeedOrTag
@@ -542,6 +543,7 @@ class FeedViewModel(
                 isOpenDrawerOnFab = params[27] as Boolean,
                 translationModelDownloadProgress = params[28] as BergamotModelDownloadProgress?,
                 forceSingleColumn = params[31] as Boolean,
+                timelineMode = params[32] as Boolean,
             )
         }.stateIn(
             viewModelScope,
@@ -698,6 +700,7 @@ data class FeedState(
     override val isOpenDrawerOnFab: Boolean = false,
     override val translationModelDownloadProgress: BergamotModelDownloadProgress? = null,
     override val forceSingleColumn: Boolean = false,
+    override val timelineMode: Boolean = false,
 ) : FeedScreenViewState
 
 @Immutable
@@ -733,6 +736,7 @@ interface FeedScreenViewState {
     val isOpenDrawerOnFab: Boolean
     val translationModelDownloadProgress: BergamotModelDownloadProgress?
     val forceSingleColumn: Boolean
+    val timelineMode: Boolean
 }
 
 private data class FeedCardTranslationConfig(

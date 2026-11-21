@@ -412,15 +412,31 @@ class Repository(
                     (value ?: Instant.EPOCH).isAfter(Instant.now().minusSeconds(10))
                 }.distinctUntilChanged()
 
+    val timelineMode: StateFlow<Boolean> = settingsStore.timelineMode
+
+    fun setTimelineMode(value: Boolean) = settingsStore.setTimelineMode(value)
+
+    /**
+     * The filter applied to the article list. Timeline mode overrides the user's choice.
+     */
+    val currentFeedListFilter: Flow<FeedListFilter>
+        get() =
+            combine(feedListFilter, timelineMode) { filter, timeline ->
+                if (timeline) timelineFeedListFilter else filter
+            }
+
+    private val currentFeedListFilterValue: FeedListFilter
+        get() = if (timelineMode.value) timelineFeedListFilter else feedListFilter.value
+
     @OptIn(ExperimentalCoroutinesApi::class)
     fun getCurrentFeedListItems(): Flow<PagingData<FeedListItem>> =
         combine(
             currentFeedAndTag,
             minReadTime,
-            currentSorting,
-            feedListFilter,
+            combine(currentSorting, timelineMode, ::Pair),
+            currentFeedListFilter,
             search,
-        ) { feedAndTag, minReadTime, currentSorting, feedListFilter, search ->
+        ) { feedAndTag, minReadTime, (currentSorting, timeline), feedListFilter, search ->
             val (feedId, tag) = feedAndTag
             FeedListArgs(
                 feedId = feedId,
@@ -433,6 +449,7 @@ class Repository(
                 newestFirst = currentSorting == SortingOptions.NEWEST_FIRST,
                 filter = feedListFilter,
                 search = search,
+                timeline = timeline,
             )
         }.flatMapLatest {
             feedItemStore.getPagedFeedItemsRaw(
@@ -442,6 +459,7 @@ class Repository(
                 newestFirst = it.newestFirst,
                 filter = it.filter,
                 search = it.search,
+                timeline = it.timeline,
             )
         }
 
@@ -456,7 +474,7 @@ class Repository(
         combine(
             currentFeedAndTag,
             minReadTime,
-            feedListFilter,
+            currentFeedListFilter,
             search,
         ) { feedAndTag, minReadTime, feedListFilter, search ->
             val (feedId, tag) = feedAndTag
@@ -619,11 +637,12 @@ class Repository(
         feedItemStore.markAsReadRaw(
             feedId = feedId,
             tag = tag,
-            filter = feedListFilter.value,
+            filter = currentFeedListFilterValue,
             search = search.value,
             minReadTime = minReadTime.value,
-            descending = SortingOptions.NEWEST_FIRST != currentSorting.value,
+            descending = !timelineMode.value && SortingOptions.NEWEST_FIRST != currentSorting.value,
             cursor = cursor,
+            timeline = timelineMode.value,
         )
         runOnceSyncChainSendRead(di)
     }
@@ -636,11 +655,12 @@ class Repository(
         feedItemStore.markAsReadRaw(
             feedId = feedId,
             tag = tag,
-            filter = feedListFilter.value,
+            filter = currentFeedListFilterValue,
             search = search.value,
             minReadTime = minReadTime.value,
-            descending = SortingOptions.NEWEST_FIRST == currentSorting.value,
+            descending = timelineMode.value || SortingOptions.NEWEST_FIRST == currentSorting.value,
             cursor = cursor,
+            timeline = timelineMode.value,
         )
         runOnceSyncChainSendRead(di)
     }
@@ -925,6 +945,7 @@ private data class FeedListArgs(
     val minReadTime: Instant,
     val filter: FeedListFilter,
     val search: String,
+    val timeline: Boolean = false,
 )
 
 // Wrapper class because flow combine doesn't like nulls
