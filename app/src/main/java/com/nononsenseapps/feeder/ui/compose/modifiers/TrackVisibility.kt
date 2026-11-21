@@ -29,12 +29,18 @@ private class VisibilityTrackerNode(
     GlobalPositionAwareModifierNode {
     private var previousVisibilityPercentage: Float? = null
     private var previousScrolledOffTop: Boolean? = null
+    private var previousScrolledOffBottom: Boolean? = null
 
     /**
      * Top edge of the visible area. Cached because the parent bounds are empty once the layout has
      * been clipped away completely.
      */
     private var lastKnownVisibleTop: Float? = null
+
+    /**
+     * Bottom edge of the visible area, cached for the same reason as [lastKnownVisibleTop].
+     */
+    private var lastKnownVisibleBottom: Float? = null
     private val minimumVisibilityDelta = 0.01f
 
     override fun onGloballyPositioned(coordinates: LayoutCoordinates) {
@@ -44,6 +50,7 @@ private class VisibilityTrackerNode(
         if (parentBounds == null || !coordinates.isAttached) {
             previousVisibilityPercentage = 0f
             previousScrolledOffTop = null
+            previousScrolledOffBottom = null
             return
         }
 
@@ -62,6 +69,7 @@ private class VisibilityTrackerNode(
 
         if (!parentBounds.isEmpty) {
             lastKnownVisibleTop = parentBounds.top
+            lastKnownVisibleBottom = parentBounds.bottom
         }
 
         // boundsInWindow is clipped, so the unclipped position is needed to tell whether the layout
@@ -69,15 +77,23 @@ private class VisibilityTrackerNode(
         // pushed down by items inserted above it)
         val scrolledOffTop =
             lastKnownVisibleTop?.let { visibleTop ->
-                coordinates.positionInWindow().y < visibleTop - TOP_EDGE_TOLERANCE_PX
+                coordinates.positionInWindow().y < visibleTop - EDGE_TOLERANCE_PX
             } ?: previousScrolledOffTop ?: false
+
+        val scrolledOffBottom =
+            lastKnownVisibleBottom?.let { visibleBottom ->
+                coordinates.positionInWindow().y + coordinates.size.height > visibleBottom + EDGE_TOLERANCE_PX
+            } ?: previousScrolledOffBottom ?: false
 
         val visibilityDifference =
             previousVisibilityPercentage?.let { previous ->
                 abs(visibilityPercentage - previous)
             } ?: Float.MAX_VALUE
 
-        if (visibilityDifference >= minimumVisibilityDelta || scrolledOffTop != previousScrolledOffTop) {
+        if (visibilityDifference >= minimumVisibilityDelta ||
+            scrolledOffTop != previousScrolledOffTop ||
+            scrolledOffBottom != previousScrolledOffBottom
+        ) {
             onVisibilityChanged(
                 VisibilityInfo(
                     isVisible = visibilityPercentage > 0f,
@@ -85,10 +101,12 @@ private class VisibilityTrackerNode(
                     bounds = boundsInWindow,
                     isAboveThreshold = visibilityPercentage >= thresholdPercentage,
                     isScrolledOffTop = scrolledOffTop,
+                    isScrolledOffBottom = scrolledOffBottom,
                 ),
             )
             previousVisibilityPercentage = visibilityPercentage
             previousScrolledOffTop = scrolledOffTop
+            previousScrolledOffBottom = scrolledOffBottom
         }
     }
 }
@@ -96,7 +114,7 @@ private class VisibilityTrackerNode(
 /**
  * Sub-pixel differences are rounding noise, not scrolling.
  */
-private const val TOP_EDGE_TOLERANCE_PX = 1f
+private const val EDGE_TOLERANCE_PX = 1f
 
 data class VisibilityInfo(
     val isVisible: Boolean,
@@ -109,7 +127,21 @@ data class VisibilityInfo(
      * and also when it leaves at the bottom.
      */
     val isScrolledOffTop: Boolean,
+    /**
+     * True when the bottom edge of the layout is below the bottom edge of its parent - in other
+     * words when it is scrolling off the bottom of the screen.
+     */
+    val isScrolledOffBottom: Boolean = false,
 )
+
+/**
+ * True when the layout is leaving the screen at the edge the user reads towards.
+ */
+fun VisibilityInfo.isScrolledPast(towardsBottom: Boolean): Boolean =
+    when (towardsBottom) {
+        true -> isScrolledOffBottom
+        false -> isScrolledOffTop
+    }
 
 private class VisibilityTrackerElement(
     private val thresholdPercentage: Float,

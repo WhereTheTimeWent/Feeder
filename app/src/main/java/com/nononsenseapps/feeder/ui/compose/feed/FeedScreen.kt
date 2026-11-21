@@ -139,6 +139,7 @@ import com.nononsenseapps.feeder.ui.compose.feedarticle.onlyUnreadAndSaved
 import com.nononsenseapps.feeder.ui.compose.material3.DrawerState
 import com.nononsenseapps.feeder.ui.compose.material3.DrawerValue
 import com.nononsenseapps.feeder.ui.compose.material3.rememberDrawerState
+import com.nononsenseapps.feeder.ui.compose.modifiers.isScrolledPast
 import com.nononsenseapps.feeder.ui.compose.modifiers.trackVisibility
 import com.nononsenseapps.feeder.ui.compose.navdrawer.ScreenWithNavDrawer
 import com.nononsenseapps.feeder.ui.compose.navigation.ArticleDestination
@@ -301,7 +302,13 @@ fun FeedScreen(
             },
             onRefreshAll = {
                 viewModel.requestImmediateSyncOfAll()
+                // In timeline mode new items arrive above and the list stays where it is. Jumping
+                // to the top would also push everything visible out at the bottom - which marks
+                // it as read.
                 coroutineScope.launch {
+                    if (viewState.timelineMode) {
+                        return@launch
+                    }
                     if (feedListState.firstVisibleItemIndex != 0) {
                         feedListState.animateScrollToItem(0)
                     }
@@ -1465,13 +1472,16 @@ fun FeedListContent(
             ) {
                 /*
                 This is a trick to make the list stay at item 0 when updates come in IF it is
-                scrolled to the top.
+                scrolled to the top. Not in timeline mode: there new items arrive above and the
+                list stays where the user is reading.
                  */
-                item(
-                    key = "SpacerScrollTrick",
-                    contentType = "SpacerScrollTrick",
-                ) {
-                    Spacer(modifier = Modifier.fillMaxWidth())
+                if (!viewState.timelineMode) {
+                    item(
+                        key = "SpacerScrollTrick",
+                        contentType = "SpacerScrollTrick",
+                    ) {
+                        Spacer(modifier = Modifier.fillMaxWidth())
+                    }
                 }
                 items(
                     count = pagedFeedItems.itemCount,
@@ -1483,13 +1493,15 @@ fun FeedListContent(
 
                     val itemCoroutineScope = rememberCoroutineScope()
                     var itemWasVisible by remember(previewItem.id) { mutableStateOf(false) }
-                    // Last known position relative to the top edge of the list. Only items which
-                    // have been scrolled past the top may be marked as read - items which leave at
-                    // the bottom (scrolling back up, or being pushed down by newly synced items)
-                    // must stay unread. Deliberately not snapshot state - it is written from the
-                    // layout phase and only read once the item leaves composition, so making it
-                    // observable would dirty the snapshot on every scroll frame.
-                    val itemScrolledOffTop = remember(previewItem.id) { AtomicBoolean(false) }
+                    // Last known position relative to the edge the user reads towards: the top of
+                    // the list, or the bottom in timeline mode where the user reads upwards. Only
+                    // items which have been scrolled past that edge may be marked as read - items
+                    // which leave at the other edge (scrolling back, or being pushed down by newly
+                    // synced items) must stay unread. Deliberately not snapshot state - it is
+                    // written from the layout phase and only read once the item leaves
+                    // composition, so making it observable would dirty the snapshot on every
+                    // scroll frame.
+                    val itemScrolledPast = remember(previewItem.id) { AtomicBoolean(false) }
 
                     LaunchedEffect(loadedItem.id, loadedItem.title, loadedItem.snippet, translatedFeedCards.generation, onTranslateFeedCard) {
                         onTranslateFeedCard(loadedItem)
@@ -1499,7 +1511,7 @@ fun FeedListContent(
                     // composition, which happens when they scroll out of the viewport
                     DisposableEffect(previewItem.id, markAsUnread) {
                         onDispose {
-                            if (itemWasVisible && itemScrolledOffTop.get()) {
+                            if (itemWasVisible && itemScrolledPast.get()) {
                                 coroutineScope.launch {
                                     logDebug(LOG_TAG, "Marking ${previewItem.id} as read")
                                     markAsUnread(previewItem.id, false)
@@ -1592,11 +1604,11 @@ fun FeedListContent(
                                             columnSpan = 1,
                                         )
                                 }.let { modifier ->
-                                    if (viewState.markAsReadOnScroll && previewItem.unread) {
+                                    if ((viewState.markAsReadOnScroll || viewState.timelineMode) && previewItem.unread) {
                                         modifier.trackVisibility(0.9f) { info ->
                                             // Remembered so the disposable effect can tell in which
                                             // direction the item left the screen
-                                            itemScrolledOffTop.set(info.isScrolledOffTop)
+                                            itemScrolledPast.set(info.isScrolledPast(towardsBottom = viewState.timelineMode))
                                             if (info.isAboveThreshold) {
                                                 // Using itemCoroutineScope because that scope gets destroyed when item scrolls off screen
                                                 // So implicitly, if user is scrolling very fast, the coroutine will be cancelled
@@ -1742,13 +1754,15 @@ fun FeedGridContent(
 
                     val itemCoroutineScope = rememberCoroutineScope()
                     var itemWasVisible by remember(previewItem.id) { mutableStateOf(false) }
-                    // Last known position relative to the top edge of the list. Only items which
-                    // have been scrolled past the top may be marked as read - items which leave at
-                    // the bottom (scrolling back up, or being pushed down by newly synced items)
-                    // must stay unread. Deliberately not snapshot state - it is written from the
-                    // layout phase and only read once the item leaves composition, so making it
-                    // observable would dirty the snapshot on every scroll frame.
-                    val itemScrolledOffTop = remember(previewItem.id) { AtomicBoolean(false) }
+                    // Last known position relative to the edge the user reads towards: the top of
+                    // the list, or the bottom in timeline mode where the user reads upwards. Only
+                    // items which have been scrolled past that edge may be marked as read - items
+                    // which leave at the other edge (scrolling back, or being pushed down by newly
+                    // synced items) must stay unread. Deliberately not snapshot state - it is
+                    // written from the layout phase and only read once the item leaves
+                    // composition, so making it observable would dirty the snapshot on every
+                    // scroll frame.
+                    val itemScrolledPast = remember(previewItem.id) { AtomicBoolean(false) }
 
                     LaunchedEffect(loadedItem.id, loadedItem.title, loadedItem.snippet, translatedFeedCards.generation, onTranslateFeedCard) {
                         onTranslateFeedCard(loadedItem)
@@ -1758,7 +1772,7 @@ fun FeedGridContent(
                     // composition, which happens when they scroll out of the viewport
                     DisposableEffect(previewItem.id, markAsUnread) {
                         onDispose {
-                            if (itemWasVisible && itemScrolledOffTop.get()) {
+                            if (itemWasVisible && itemScrolledPast.get()) {
                                 coroutineScope.launch {
                                     logDebug(LOG_TAG, "Marking ${previewItem.id} as read")
                                     markAsUnread(previewItem.id, false)
@@ -1831,12 +1845,12 @@ fun FeedGridContent(
                             onOpenFeedItemInBrowser(previewItem.id)
                         },
                         modifier =
-                            if (viewState.markAsReadOnScroll && previewItem.unread) {
+                            if ((viewState.markAsReadOnScroll || viewState.timelineMode) && previewItem.unread) {
                                 Modifier
                                     .trackVisibility(0.9f) { info ->
                                         // Remembered so the disposable effect can tell in which
                                         // direction the item left the screen
-                                        itemScrolledOffTop.set(info.isScrolledOffTop)
+                                        itemScrolledPast.set(info.isScrolledPast(towardsBottom = viewState.timelineMode))
                                         if (info.isAboveThreshold) {
                                             // Using itemCoroutineScope because that scope gets destroyed when item scrolls off screen
                                             // So implicitly, if user is scrolling very fast, the coroutine will be cancelled
