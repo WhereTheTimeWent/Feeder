@@ -131,6 +131,13 @@ android {
                 versionCode = project.extra["commitCount"] as Int?
                 applicationIdSuffix = ".play"
             }
+            // Personal release builds of the timeline fork. Installs next to the store versions.
+            create("timeline") {
+                dimension = "store"
+                versionNameSuffix = "-timeline"
+                versionCode = project.extra["commitCount"] as Int?
+                applicationIdSuffix = ".timeline"
+            }
         }
     }
     testOptions {
