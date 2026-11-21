@@ -1229,7 +1229,12 @@ fun FeedScreen(
         key(viewState.currentFeedOrTag) {
             rememberTopAppBarState()
         }
-    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(topAppBarState)
+    // In timeline mode the title with the unread count stays visible
+    val scrollBehavior =
+        when (viewState.timelineMode) {
+            true -> TopAppBarDefaults.pinnedScrollBehavior(topAppBarState)
+            false -> TopAppBarDefaults.enterAlwaysScrollBehavior(topAppBarState)
+        }
 
     val pullRefreshState =
         rememberPullRefreshState(
