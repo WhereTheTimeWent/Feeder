@@ -4,4 +4,5 @@
   <string name="timeline_mode_description">Newest articles on top, read articles stay visible. Opens at the oldest unread article and marks articles as read once they leave the screen at the bottom.</string>
   <string name="timeline_new_articles">%1$d new</string>
   <string name="timeline_scroll_to_newest">Scroll to the newest articles</string>
+  <string name="feed_item_style_timeline">Timeline</string>
 </resources>

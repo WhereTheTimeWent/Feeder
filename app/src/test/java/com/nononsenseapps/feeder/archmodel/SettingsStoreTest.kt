@@ -422,6 +422,11 @@ class SettingsStoreTest : DIAware {
     }
 
     @Test
+    fun timelineItemStyleIsReadBack() {
+        assertEquals(FeedItemStyle.TIMELINE, feedItemStyleFromString(FeedItemStyle.TIMELINE.name))
+    }
+
+    @Test
     fun applyBlocklistToSummariesDefaultsToFalse() {
         every { sp.getBoolean(PREF_BLOCKLIST_APPLY_TO_SUMMARIES, false) } returns false
 

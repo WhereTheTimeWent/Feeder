@@ -1467,6 +1467,7 @@ fun FeedListContent(
                 FeedItemStyle.COMPACT_CARD -> Arrangement.spacedBy(LocalDimens.current.margin)
                 FeedItemStyle.COMPACT -> Arrangement.spacedBy(0.dp)
                 FeedItemStyle.SUPER_COMPACT -> Arrangement.spacedBy(0.dp)
+                FeedItemStyle.TIMELINE -> Arrangement.spacedBy(0.dp)
             }
 
         AnimatedVisibility(
@@ -1491,6 +1492,7 @@ fun FeedListContent(
                                     FeedItemStyle.COMPACT_CARD -> addMargin(horizontal = LocalDimens.current.margin)
                                     // No margin since dividers
                                     FeedItemStyle.COMPACT, FeedItemStyle.SUPER_COMPACT -> this
+                                    FeedItemStyle.TIMELINE -> this
                                 }
                             }.asPaddingValues()
                     },
@@ -1758,6 +1760,7 @@ fun FeedGridContent(
                 FeedItemStyle.COMPACT_CARD -> Arrangement.spacedBy(LocalDimens.current.gutter)
                 FeedItemStyle.COMPACT -> Arrangement.spacedBy(LocalDimens.current.gutter)
                 FeedItemStyle.SUPER_COMPACT -> Arrangement.spacedBy(LocalDimens.current.gutter)
+                FeedItemStyle.TIMELINE -> Arrangement.spacedBy(LocalDimens.current.gutter)
             }
 
         AnimatedVisibility(

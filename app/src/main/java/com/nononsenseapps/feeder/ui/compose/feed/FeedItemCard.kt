@@ -212,7 +212,6 @@ fun RowScope.FeedItemText(
                 }
             }
         }
-    val closeMenuText = stringResource(id = R.string.close_menu)
     Column(
         verticalArrangement = Arrangement.spacedBy(4.dp),
         modifier =
@@ -262,107 +261,18 @@ fun RowScope.FeedItemText(
                     }
                 }
             }
-            DropdownMenu(
-                expanded = dropDownMenuExpanded,
-                onDismissRequest = onDismissDropdown,
-                modifier = Modifier.onKeyEventLikeEscape(onDismissDropdown),
-            ) {
-                DropdownMenuItem(
-                    onClick = {
-                        onDismissDropdown()
-                        onOpenFeedItemInReader()
-                    },
-                    text = {
-                        Text(
-                            text = stringResource(id = R.string.open_article_in_reader),
-                        )
-                    },
-                )
-                DropdownMenuItem(
-                    onClick = {
-                        onDismissDropdown()
-                        onOpenFeedItemInCustomTab()
-                    },
-                    text = {
-                        Text(
-                            text = stringResource(id = R.string.open_article_in_custom_tab),
-                        )
-                    },
-                )
-                DropdownMenuItem(
-                    onClick = {
-                        onDismissDropdown()
-                        onOpenFeedItemInBrowser()
-                    },
-                    text = {
-                        Text(
-                            text = stringResource(id = R.string.open_article_in_default_browser),
-                        )
-                    },
-                )
-                DropdownMenuItem(
-                    onClick = {
-                        onDismissDropdown()
-                        onToggleBookmark()
-                    },
-                    text = {
-                        Text(
-                            text =
-                                stringResource(
-                                    when (item.bookmarked) {
-                                        true -> R.string.unsave_article
-                                        false -> R.string.save_article
-                                    },
-                                ),
-                        )
-                    },
-                )
-                DropdownMenuItem(
-                    onClick = {
-                        onDismissDropdown()
-                        onMarkAboveAsRead()
-                    },
-                    text = {
-                        Text(
-                            text = stringResource(id = R.string.mark_items_above_as_read),
-                        )
-                    },
-                )
-                DropdownMenuItem(
-                    onClick = {
-                        onDismissDropdown()
-                        onMarkBelowAsRead()
-                    },
-                    text = {
-                        Text(
-                            text = stringResource(id = R.string.mark_items_below_as_read),
-                        )
-                    },
-                )
-                DropdownMenuItem(
-                    onClick = {
-                        onDismissDropdown()
-                        onShareItem()
-                    },
-                    text = {
-                        Text(
-                            text = stringResource(R.string.share),
-                        )
-                    },
-                )
-                // Hidden button for TalkBack
-                DropdownMenuItem(
-                    onClick = onDismissDropdown,
-                    text = {},
-                    modifier =
-                        Modifier
-                            .height(0.dp)
-                            .safeSemantics {
-                                contentDescription = closeMenuText
-                                role = Role.Button
-                            },
-                )
-            }
+            FeedItemDropdownMenu(
+                item = item,
+                dropDownMenuExpanded = dropDownMenuExpanded,
+                onDismissDropdown = onDismissDropdown,
+                onOpenFeedItemInReader = onOpenFeedItemInReader,
+                onOpenFeedItemInCustomTab = onOpenFeedItemInCustomTab,
+                onOpenFeedItemInBrowser = onOpenFeedItemInBrowser,
+                onMarkAboveAsRead = onMarkAboveAsRead,
+                onMarkBelowAsRead = onMarkBelowAsRead,
+                onShareItem = onShareItem,
+                onToggleBookmark = onToggleBookmark,
+            )
         }
         if (showReadingTime) {
             val readTimeSecs =
@@ -408,6 +318,127 @@ fun RowScope.FeedItemText(
                 }
             }
         }
+    }
+}
+
+/**
+ * The long press menu of an item in the feed list.
+ */
+@Composable
+fun FeedItemDropdownMenu(
+    item: FeedListItem,
+    dropDownMenuExpanded: Boolean,
+    onDismissDropdown: () -> Unit,
+    onOpenFeedItemInReader: () -> Unit,
+    onOpenFeedItemInCustomTab: () -> Unit,
+    onOpenFeedItemInBrowser: () -> Unit,
+    onMarkAboveAsRead: () -> Unit,
+    onMarkBelowAsRead: () -> Unit,
+    onShareItem: () -> Unit,
+    onToggleBookmark: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val closeMenuText = stringResource(id = R.string.close_menu)
+    DropdownMenu(
+        expanded = dropDownMenuExpanded,
+        onDismissRequest = onDismissDropdown,
+        modifier = modifier.onKeyEventLikeEscape(onDismissDropdown),
+    ) {
+        DropdownMenuItem(
+            onClick = {
+                onDismissDropdown()
+                onOpenFeedItemInReader()
+            },
+            text = {
+                Text(
+                    text = stringResource(id = R.string.open_article_in_reader),
+                )
+            },
+        )
+        DropdownMenuItem(
+            onClick = {
+                onDismissDropdown()
+                onOpenFeedItemInCustomTab()
+            },
+            text = {
+                Text(
+                    text = stringResource(id = R.string.open_article_in_custom_tab),
+                )
+            },
+        )
+        DropdownMenuItem(
+            onClick = {
+                onDismissDropdown()
+                onOpenFeedItemInBrowser()
+            },
+            text = {
+                Text(
+                    text = stringResource(id = R.string.open_article_in_default_browser),
+                )
+            },
+        )
+        DropdownMenuItem(
+            onClick = {
+                onDismissDropdown()
+                onToggleBookmark()
+            },
+            text = {
+                Text(
+                    text =
+                        stringResource(
+                            when (item.bookmarked) {
+                                true -> R.string.unsave_article
+                                false -> R.string.save_article
+                            },
+                        ),
+                )
+            },
+        )
+        DropdownMenuItem(
+            onClick = {
+                onDismissDropdown()
+                onMarkAboveAsRead()
+            },
+            text = {
+                Text(
+                    text = stringResource(id = R.string.mark_items_above_as_read),
+                )
+            },
+        )
+        DropdownMenuItem(
+            onClick = {
+                onDismissDropdown()
+                onMarkBelowAsRead()
+            },
+            text = {
+                Text(
+                    text = stringResource(id = R.string.mark_items_below_as_read),
+                )
+            },
+        )
+        DropdownMenuItem(
+            onClick = {
+                onDismissDropdown()
+                onShareItem()
+            },
+            text = {
+                Text(
+                    text = stringResource(R.string.share),
+                )
+            },
+        )
+        // Hidden button for TalkBack
+        DropdownMenuItem(
+            onClick = onDismissDropdown,
+            text = {},
+            modifier =
+                Modifier
+                    .height(0.dp)
+                    .safeSemantics {
+                        contentDescription = closeMenuText
+                        role = Role.Button
+                    },
+        )
     }
 }
 

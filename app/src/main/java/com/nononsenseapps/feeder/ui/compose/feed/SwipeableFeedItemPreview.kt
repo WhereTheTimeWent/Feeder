@@ -52,6 +52,7 @@ import com.nononsenseapps.feeder.R
 import com.nononsenseapps.feeder.archmodel.FeedItemStyle
 import com.nononsenseapps.feeder.archmodel.SwipeAsRead
 import com.nononsenseapps.feeder.ui.compose.components.safeSemantics
+import com.nononsenseapps.feeder.ui.compose.feed.timeline.FeedItemTimeline
 import com.nononsenseapps.feeder.ui.compose.feedarticle.FeedListFilter
 import com.nononsenseapps.feeder.ui.compose.feedarticle.onlyUnread
 import com.nononsenseapps.feeder.ui.compose.theme.LocalDimens
@@ -170,6 +171,7 @@ fun SwipeableFeedItemPreview(
                     shape =
                         when (feedItemStyle) {
                             FeedItemStyle.COMPACT, FeedItemStyle.SUPER_COMPACT -> RectangleShape
+                            FeedItemStyle.TIMELINE -> RectangleShape
                             else -> MaterialTheme.shapes.medium
                         },
                 ).combinedClickable(
@@ -375,6 +377,34 @@ fun SwipeableFeedItemPreview(
             FeedItemStyle.SUPER_COMPACT -> {
                 FeedItemSuperCompact(
                     item = item,
+                    onOpenFeedItemInReader = onOpenFeedItemInReader,
+                    onOpenFeedItemInCustomTab = onOpenFeedItemInCustomTab,
+                    onOpenFeedItemInBrowser = onOpenFeedItemInBrowser,
+                    onMarkAboveAsRead = onMarkAboveAsRead,
+                    onMarkBelowAsRead = onMarkBelowAsRead,
+                    onShareItem = onShareItem,
+                    onToggleBookmark = onToggleBookmark,
+                    dropDownMenuExpanded = dropDownMenuExpanded,
+                    onDismissDropdown = { dropDownMenuExpanded = false },
+                    bookmarkIndicator = bookmarkIndicator,
+                    maxLines = maxLines,
+                    showOnlyTitle = showOnlyTitle,
+                    showReadingTime = showReadingTime,
+                    modifier =
+                        Modifier.offset {
+                            try {
+                                IntOffset(anchoredDraggableState.requireOffset().roundToInt(), 0)
+                            } catch (_: IllegalStateException) {
+                                IntOffset(0, 0)
+                            }
+                        },
+                )
+            }
+
+            FeedItemStyle.TIMELINE -> {
+                FeedItemTimeline(
+                    item = item,
+                    showThumbnail = showThumbnail && !compactLandscape,
                     onOpenFeedItemInReader = onOpenFeedItemInReader,
                     onOpenFeedItemInCustomTab = onOpenFeedItemInCustomTab,
                     onOpenFeedItemInBrowser = onOpenFeedItemInBrowser,
