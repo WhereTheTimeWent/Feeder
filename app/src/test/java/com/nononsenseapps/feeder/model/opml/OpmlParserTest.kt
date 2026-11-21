@@ -104,6 +104,7 @@ class OpmlParserTest : DIAware {
                         UserSettings.SETTING_TRANSLATE_ARTICLE_PREVIEWS_BY_DEFAULT -> "true"
                         UserSettings.SETTING_TRANSLATE_ARTICLES_BY_DEFAULT -> "true"
                         UserSettings.SETTINGS_FORCE_SINGLE_COLUMN -> "true"
+                        UserSettings.SETTING_TIMELINE_MODE -> "true"
                     },
             )
         }
@@ -161,6 +162,7 @@ class OpmlParserTest : DIAware {
                 settingsStore.setApplyBlocklistToSummaries(true)
                 settingsStore.setApplyBlocklistToLinks(true)
                 settingsStore.setForceSingleColumn(true)
+                settingsStore.setTimelineMode(true)
             }
 
             confirmVerified(settingsStore)

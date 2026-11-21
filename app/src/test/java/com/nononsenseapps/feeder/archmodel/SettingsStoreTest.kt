@@ -404,6 +404,24 @@ class SettingsStoreTest : DIAware {
     }
 
     @Test
+    fun timelineModeDefaultsToFalse() {
+        every { sp.getBoolean(PREF_TIMELINE_MODE, false) } returns false
+
+        assertEquals(false, store.timelineMode.value)
+    }
+
+    @Test
+    fun timelineMode() {
+        store.setTimelineMode(true)
+
+        verify {
+            sp.edit().putBoolean(PREF_TIMELINE_MODE, true).apply()
+        }
+
+        assertEquals(true, store.timelineMode.value)
+    }
+
+    @Test
     fun applyBlocklistToSummariesDefaultsToFalse() {
         every { sp.getBoolean(PREF_BLOCKLIST_APPLY_TO_SUMMARIES, false) } returns false
 
