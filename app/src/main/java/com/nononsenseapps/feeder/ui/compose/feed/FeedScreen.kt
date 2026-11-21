@@ -130,6 +130,7 @@ import com.nononsenseapps.feeder.ui.compose.deletefeed.DeleteFeedDialog
 import com.nononsenseapps.feeder.ui.compose.dialog.RenameTagDialog
 import com.nononsenseapps.feeder.ui.compose.empty.NothingToRead
 import com.nononsenseapps.feeder.ui.compose.feed.timeline.TimelineReadingEdgeEffect
+import com.nononsenseapps.feeder.ui.compose.feed.timeline.hasLeftAtBottom
 import com.nononsenseapps.feeder.ui.compose.feedarticle.FeedListFilterCallback
 import com.nononsenseapps.feeder.ui.compose.feedarticle.FeedScreenViewState
 import com.nononsenseapps.feeder.ui.compose.feedarticle.FeedViewModel
@@ -1631,6 +1632,12 @@ fun FeedListContent(
                                                     itemWasVisible = true
                                                     // Marks as read in disposable effect
                                                 }
+                                            } else if (viewState.timelineMode && itemWasVisible && info.hasLeftAtBottom) {
+                                                // Marked right away: the list may keep the item composed for a while after it
+                                                // has left the screen, which delays the disposable effect
+                                                itemWasVisible = false
+                                                logDebug(LOG_TAG, "Marking ${previewItem.id} as read")
+                                                markAsUnread(previewItem.id, false)
                                             }
                                         }
                                     } else {
@@ -1873,6 +1880,12 @@ fun FeedGridContent(
                                                 itemWasVisible = true
                                                 // Marks as read in disposable effect
                                             }
+                                        } else if (viewState.timelineMode && itemWasVisible && info.hasLeftAtBottom) {
+                                            // Marked right away: the list may keep the item composed for a while after it
+                                            // has left the screen, which delays the disposable effect
+                                            itemWasVisible = false
+                                            logDebug(LOG_TAG, "Marking ${previewItem.id} as read")
+                                            markAsUnread(previewItem.id, false)
                                         }
                                     }.then(
                                         // Disable item animations during refresh to prevent scroll position issues
