@@ -428,6 +428,21 @@ class Repository(
     private val currentFeedListFilterValue: FeedListFilter
         get() = if (timelineMode.value) timelineFeedListFilter else feedListFilter.value
 
+    suspend fun getTimelineReadingEdge(): TimelineReadingEdge? {
+        val (feedId, tag) = currentFeedAndTag.value
+        return feedItemStore.getTimelineReadingEdge(
+            feedId = feedId,
+            tag = tag,
+            minReadTime =
+                when (feedId) {
+                    ID_SAVED_ARTICLES -> Instant.EPOCH
+                    else -> minReadTime.value
+                },
+            filter = currentFeedListFilterValue,
+            search = search.value,
+        )
+    }
+
     @OptIn(ExperimentalCoroutinesApi::class)
     fun getCurrentFeedListItems(): Flow<PagingData<FeedListItem>> =
         combine(

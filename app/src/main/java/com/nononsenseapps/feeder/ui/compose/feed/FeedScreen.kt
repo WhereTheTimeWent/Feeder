@@ -129,6 +129,7 @@ import com.nononsenseapps.feeder.ui.compose.deletefeed.DeletableFeed
 import com.nononsenseapps.feeder.ui.compose.deletefeed.DeleteFeedDialog
 import com.nononsenseapps.feeder.ui.compose.dialog.RenameTagDialog
 import com.nononsenseapps.feeder.ui.compose.empty.NothingToRead
+import com.nononsenseapps.feeder.ui.compose.feed.timeline.TimelineReadingEdgeEffect
 import com.nononsenseapps.feeder.ui.compose.feedarticle.FeedListFilterCallback
 import com.nononsenseapps.feeder.ui.compose.feedarticle.FeedScreenViewState
 import com.nononsenseapps.feeder.ui.compose.feedarticle.FeedViewModel
@@ -249,6 +250,17 @@ fun FeedScreen(
         key(viewState.currentFeedOrTag) {
             rememberLazyStaggeredGridState()
         }
+
+    TimelineReadingEdgeEffect(
+        enabled = viewState.timelineMode,
+        feedOrTag = viewState.currentFeedOrTag,
+        pagedFeedItems = pagedFeedItems,
+        listState = feedListState,
+        gridState = feedGridState,
+        isPositioned = { viewModel.timelinePositionedFor == it },
+        setPositioned = { viewModel.timelinePositionedFor = it },
+        findReadingEdge = viewModel::getTimelineReadingEdge,
+    )
 
     val toolbarColor = MaterialTheme.colorScheme.surface.toArgb()
 

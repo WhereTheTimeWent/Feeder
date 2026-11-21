@@ -30,3 +30,11 @@ val timelineFeedListFilter: FeedListFilter =
  */
 const val FEED_ITEM_LIST_SORT_ORDER_TIMELINE =
     "first_synced_time DESC, primary_sort_time DESC, pub_date DESC, feed_items.id DESC"
+
+/**
+ * The oldest unread article in the timeline and its position in the list.
+ */
+data class TimelineReadingEdge(
+    val index: Int,
+    val itemId: Long,
+)

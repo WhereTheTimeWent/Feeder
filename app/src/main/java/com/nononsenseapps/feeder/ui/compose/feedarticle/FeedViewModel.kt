@@ -14,6 +14,7 @@ import com.nononsenseapps.feeder.archmodel.Repository
 import com.nononsenseapps.feeder.archmodel.ScreenTitle
 import com.nononsenseapps.feeder.archmodel.SwipeAsRead
 import com.nononsenseapps.feeder.archmodel.ThemeOptions
+import com.nononsenseapps.feeder.archmodel.TimelineReadingEdge
 import com.nononsenseapps.feeder.background.runOnceRssSync
 import com.nononsenseapps.feeder.base.DIAwareViewModel
 import com.nononsenseapps.feeder.blob.blobFullInputStream
@@ -157,6 +158,15 @@ class FeedViewModel(
         applicationCoroutineScope.launch {
             repository.markAsReadAndNotified(itemId)
         }
+
+    /**
+     * The feed or tag the timeline was last positioned at the reading edge for. Deliberately not
+     * saved state: after the process has died the list opens at the reading edge again, while
+     * returning from an article keeps the current position.
+     */
+    var timelinePositionedFor: FeedOrTag? = null
+
+    suspend fun getTimelineReadingEdge(): TimelineReadingEdge? = repository.getTimelineReadingEdge()
 
     fun markAsReadOnSwipe(itemId: Long) =
         applicationCoroutineScope.launch {

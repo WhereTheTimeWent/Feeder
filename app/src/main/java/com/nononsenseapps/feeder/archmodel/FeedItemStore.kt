@@ -129,6 +129,46 @@ class FeedItemStore(
                     .map { it.toFeedListItem(application) }
             }
 
+    /**
+     * Finds the oldest unread article in timeline order - the position the user has read up to.
+     * Returns null when everything is read. Uses the same filter and order as
+     * [getPagedFeedItemsRaw] so the index matches the paged list.
+     */
+    suspend fun getTimelineReadingEdge(
+        feedId: Long,
+        tag: String,
+        minReadTime: Instant,
+        filter: FeedListFilter,
+        search: String,
+    ): TimelineReadingEdge? {
+        val queryString = StringBuilder()
+        val args = mutableListOf<Any?>()
+
+        queryString.apply {
+            append("SELECT feed_items.id, read_time IS NULL FROM feed_items\n")
+            append("LEFT JOIN feeds ON feed_items.feed_id = feeds.id\n")
+            append("WHERE\n")
+            rawQueryFilter(filter, search, args, minReadTime, feedId, tag)
+            append("ORDER BY $FEED_ITEM_LIST_SORT_ORDER_TIMELINE\n")
+        }
+
+        return withContext(Dispatchers.IO) {
+            appDatabase.openHelper.readableDatabase
+                .query(SimpleSQLiteQuery(queryString.toString(), args.toTypedArray()))
+                .use { cursor ->
+                    var edge: TimelineReadingEdge? = null
+                    var index = 0
+                    while (cursor.moveToNext()) {
+                        if (cursor.getInt(1) == 1) {
+                            edge = TimelineReadingEdge(index = index, itemId = cursor.getLong(0))
+                        }
+                        index++
+                    }
+                    edge
+                }
+        }
+    }
+
     private fun StringBuilder.rawQueryFilter(
         filter: FeedListFilter,
         search: String,
