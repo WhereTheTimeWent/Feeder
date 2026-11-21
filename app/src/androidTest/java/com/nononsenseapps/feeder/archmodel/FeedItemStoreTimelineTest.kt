@@ -11,6 +11,7 @@ import com.nononsenseapps.feeder.db.room.Feed
 import com.nononsenseapps.feeder.db.room.FeedItem
 import com.nononsenseapps.feeder.db.room.FeedItemDao
 import com.nononsenseapps.feeder.db.room.ID_UNSET
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Before
@@ -127,6 +128,28 @@ class FeedItemStoreTimelineTest : DIAware {
         insertItems(unreadA = false, unreadB = false, unreadC = false, unreadD = false)
 
         assertNull(runBlocking { readingEdge() })
+    }
+
+    @Test
+    fun unreadCountAboveFollowsTimelineOrder() {
+        val ids = insertItems(unreadA = true, unreadB = true, unreadC = true, unreadD = false)
+
+        val counts =
+            runBlocking {
+                ids.mapValues { (_, id) ->
+                    store
+                        .getTimelineUnreadCountAbove(
+                            feedId = feedId,
+                            tag = "",
+                            minReadTime = Instant.EPOCH,
+                            filter = timelineFeedListFilter,
+                            search = "",
+                            itemId = id,
+                        ).first()
+                }
+            }
+
+        assertEquals(mapOf("D" to 0, "C" to 0, "B" to 1, "A" to 2), counts)
     }
 
     @Test

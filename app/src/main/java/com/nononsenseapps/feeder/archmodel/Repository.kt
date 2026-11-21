@@ -444,6 +444,39 @@ class Repository(
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
+    fun getTimelineUnreadCountAbove(itemId: Long): Flow<Int> =
+        combine(
+            currentFeedAndTag,
+            minReadTime,
+            currentFeedListFilter,
+            search,
+        ) { feedAndTag, minReadTime, feedListFilter, search ->
+            val (feedId, tag) = feedAndTag
+            FeedListArgs(
+                feedId = feedId,
+                tag = tag,
+                minReadTime =
+                    when (feedId) {
+                        ID_SAVED_ARTICLES -> Instant.EPOCH
+                        else -> minReadTime
+                    },
+                newestFirst = true,
+                filter = feedListFilter,
+                search = search,
+                timeline = true,
+            )
+        }.flatMapLatest {
+            feedItemStore.getTimelineUnreadCountAbove(
+                feedId = it.feedId,
+                tag = it.tag,
+                minReadTime = it.minReadTime,
+                filter = it.filter,
+                search = it.search,
+                itemId = itemId,
+            )
+        }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
     fun getCurrentFeedListItems(): Flow<PagingData<FeedListItem>> =
         combine(
             currentFeedAndTag,

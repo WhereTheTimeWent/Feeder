@@ -169,6 +169,44 @@ class FeedItemStore(
         }
     }
 
+    /**
+     * Counts the unread articles listed above [itemId] in timeline order, using the same filter as
+     * [getPagedFeedItemsRaw]. Updates whenever articles change.
+     */
+    fun getTimelineUnreadCountAbove(
+        feedId: Long,
+        tag: String,
+        minReadTime: Instant,
+        filter: FeedListFilter,
+        search: String,
+        itemId: Long,
+    ): Flow<Int> {
+        val queryString = StringBuilder()
+        val args = mutableListOf<Any?>()
+
+        queryString.apply {
+            append("SELECT count(*) FROM feed_items\n")
+            append("LEFT JOIN feeds ON feed_items.feed_id = feeds.id\n")
+            append("WHERE\n")
+            rawQueryFilter(filter, search, args, minReadTime, feedId, tag)
+            append("AND read_time IS NULL\n")
+            // Tuple comparison against the item, spelled out for older sqlite versions
+            val firstSyncedTime = "(SELECT first_synced_time FROM feed_items AS i WHERE i.id = ?)"
+            val primarySortTime = "(SELECT primary_sort_time FROM feed_items AS i WHERE i.id = ?)"
+            val pubDate = "(SELECT pub_date FROM feed_items AS i WHERE i.id = ?)"
+            append("AND (first_synced_time > $firstSyncedTime\n")
+            append("OR first_synced_time = $firstSyncedTime AND (\n")
+            append("primary_sort_time > $primarySortTime\n")
+            append("OR primary_sort_time = $primarySortTime AND (\n")
+            append("pub_date > $pubDate\n")
+            append("OR pub_date = $pubDate AND feed_items.id > ?\n")
+            append(")))\n")
+            repeat(7) { args.add(itemId) }
+        }
+
+        return dao.getPreviewsCount(SimpleSQLiteQuery(queryString.toString(), args.toTypedArray()))
+    }
+
     private fun StringBuilder.rawQueryFilter(
         filter: FeedListFilter,
         search: String,

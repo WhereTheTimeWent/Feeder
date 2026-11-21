@@ -129,6 +129,7 @@ import com.nononsenseapps.feeder.ui.compose.deletefeed.DeletableFeed
 import com.nononsenseapps.feeder.ui.compose.deletefeed.DeleteFeedDialog
 import com.nononsenseapps.feeder.ui.compose.dialog.RenameTagDialog
 import com.nononsenseapps.feeder.ui.compose.empty.NothingToRead
+import com.nononsenseapps.feeder.ui.compose.feed.timeline.TimelineNewArticlesPill
 import com.nononsenseapps.feeder.ui.compose.feed.timeline.TimelineReadingEdgeEffect
 import com.nononsenseapps.feeder.ui.compose.feed.timeline.hasLeftAtBottom
 import com.nononsenseapps.feeder.ui.compose.feedarticle.FeedListFilterCallback
@@ -164,7 +165,9 @@ import com.nononsenseapps.feeder.util.ToastMaker
 import com.nononsenseapps.feeder.util.logDebug
 import com.nononsenseapps.feeder.util.stripTrackingParameters
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import org.kodein.di.compose.LocalDI
 import org.kodein.di.compose.instance
@@ -542,6 +545,7 @@ fun FeedScreen(
             pagedFeedItems = pagedFeedItems,
             translatedFeedCards = translatedFeedCards,
             onTranslateFeedCard = viewModel::translateFeedCardIfNeeded,
+            countTimelineUnreadAbove = viewModel::getTimelineUnreadCountAbove,
         )
     }
 }
@@ -603,6 +607,7 @@ fun FeedScreen(
     readAloudProgress: StateFlow<ReadAloudProgress>? = null,
     ttsOnSeekTo: (Long) -> Unit = {},
     ttsOnGoToSpokenText: () -> Unit = {},
+    countTimelineUnreadAbove: (Long) -> Flow<Int> = { flowOf(0) },
 ) {
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
@@ -1138,6 +1143,15 @@ fun FeedScreen(
                     modifier = innerModifier,
                 )
         }
+
+        TimelineNewArticlesPill(
+            enabled = viewState.timelineMode,
+            feedOrTag = viewState.currentFeedOrTag,
+            pagedFeedItems = pagedFeedItems,
+            listState = feedListState,
+            gridState = feedGridState,
+            countUnreadAbove = countTimelineUnreadAbove,
+        )
     }
 }
 

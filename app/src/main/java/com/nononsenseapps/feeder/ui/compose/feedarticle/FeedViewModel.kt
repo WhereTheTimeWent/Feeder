@@ -168,6 +168,8 @@ class FeedViewModel(
 
     suspend fun getTimelineReadingEdge(): TimelineReadingEdge? = repository.getTimelineReadingEdge()
 
+    fun getTimelineUnreadCountAbove(itemId: Long): Flow<Int> = repository.getTimelineUnreadCountAbove(itemId)
+
     fun markAsReadOnSwipe(itemId: Long) =
         applicationCoroutineScope.launch {
             repository.markAsReadAndNotified(itemId = itemId, readTimeBeforeMinReadTime = true)
